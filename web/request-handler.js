@@ -30,7 +30,6 @@ var actions = {
     // console.log(request);
     helpers.collectData(request, function (data) {
       var url = data.split('=')[1].replace('http://', '');
-      console.log(url)
       // check sites.txt for web site
       archive.isUrlInList(url, function (found) {
         if (found) { // found site

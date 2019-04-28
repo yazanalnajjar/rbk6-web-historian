@@ -1,6 +1,5 @@
 var fs = require('fs');
 var path = require('path');
-var request = require('request');
 var _ = require('underscore');
 
 /*
@@ -17,50 +16,60 @@ exports.paths = {
 };
 
 // Used for stubbing paths for tests, do not modify
-exports.initialize = function(pathsObj) {
-  _.each(pathsObj, function(path, type) {
+exports.initialize = function (pathsObj) {
+  _.each(pathsObj, function (path, type) {
     exports.paths[type] = path;
   });
 };
 
+// The following function names are provided to you to suggest how you might
+// modularize your code. Keep it clean!
 
-exports.readListOfUrls = function(callback) {
-  fs.readFile(exports.paths.list, function(err, sites) {
-    sites = sites.toString().split('\n');
+exports.readListOfUrls = function (callback) {
+  var result = [];
+  fs.readFile(exports.paths.list, "utf8", function (err, data) {
+    result = data.split('\n');
     if (callback) {
-      callback(sites);
+      callback(result);
     }
   });
 };
 
-exports.isUrlInList = function(url, callback) {
-  exports.readListOfUrls(function(sites) {
-    var found = _.any(sites, function(site, i) {
-      return site.match(url);
-    });
-    callback(found);
+exports.isUrlInList = function (url, callback) {
+  var urls = [];
+  var result = false;
+  fs.readFile(exports.paths.list, "utf8", function (err, data) {
+    urls = data.split('\n');
+    for (var i = 0; i < urls.length; i++) {
+      if (url === urls[i]) {
+        result = true;
+        break;
+      }
+    }
+    if (callback) {
+      callback(result);
+    }
   });
 };
 
-exports.addUrlToList = function(url, callback) {
-  fs.appendFile(exports.paths.list, url + '\n', function(err, file) {
+exports.addUrlToList = function (url, callback) {
+  fs.appendFile(exports.paths.list, url + '\n', function (err, file) {
     callback();
   });
 };
 
-exports.isUrlArchived = function(url, callback) {
+exports.isUrlArchived = function (url, callback) {
   var sitePath = path.join(exports.paths.archivedSites, url);
 
-  fs.access(sitePath, function(err) {
+  fs.access(sitePath, function (err) {
     callback(!err);
   });
 };
 
-exports.downloadUrls = function(urls) {
+exports.downloadUrls = function (urls) {
   // Iterate over urls and pipe to new files
   _.each(urls, function (url) {
     if (!url) { return; }
     request('http://' + url).pipe(fs.createWriteStream(exports.paths.archivedSites + '/' + url));
   });
 };
-
